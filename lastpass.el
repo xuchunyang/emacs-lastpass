@@ -76,15 +76,39 @@
 (defun lastpass-logout ()
   "Log out."
   (with-temp-buffer
-    (unless (zerop (call-process "lpass" nil t nil "logout" "--force"))
+    (unless (zerop (call-process (lastpass-cli) nil t nil "logout" "--force"))
       (error "%s" (buffer-string)))))
 
-(defun lastpass-export ()
+(defun lastpass-export (&optional sync)
   "Return a list of alist which contains all account information."
-  (with-temp-buffer
-    (if (zerop (call-process "lpass" nil t nil "export" "--color=never"))
-        (csv-parse-buffer t)
-      (error "%s" (buffer-string)))))
+  (let ((sync (pcase sync
+                ('nil   "--sync=auto")
+                ('auto "--sync=auto")
+                ('now  "--sync=now")
+                ('no   "--sync=no")
+                (_     (error "invalid argument '%s'" sync))))
+        (fields (concat
+                 "--fields="
+                 (mapconcat #'identity
+                            '("id"
+                              "url"
+                              "username"
+                              "password"
+                              "extra"
+                              "name"
+                              "fav"
+                              "id"
+                              "grouping"
+                              "group"
+                              "fullname"
+                              "last_touch"
+                              "last_modified_gmt"
+                              "attachpresent")
+                            ","))))
+    (with-temp-buffer
+      (if (zerop (call-process (lastpass-cli) nil t nil "export" "--color=never" sync fields))
+          (csv-parse-buffer t)
+        (error "%s" (buffer-string))))))
 
 
 ;;; Helm Support
