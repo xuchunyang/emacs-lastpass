@@ -5,6 +5,7 @@
 ;; Author: Chunyang Xu <mail@xuchunyang.me>
 ;; Package-Requires: ((csv "2.1"))
 ;; Keywords: password, LastPass
+;; Version: 0.1
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -35,24 +36,42 @@
 
 (require 'csv)
 
+(defgroup lastpass nil
+  "LastPass interface for Emacs."
+  :group 'tools)
+
+(defcustom lastpass-cli "lpass"
+  "The program name of the LastPass command line too."
+  :type 'string
+  :group 'lastpass)
+
+(defun lastpass-cli ()
+  (executable-find lastpass-cli))
+
 (defun lastpass-login-p ()
-  "Check if you have logged in."
-  (zerop (call-process "lpass" nil nil nil "status")))
+  "Return t if has logined."
+  (zerop (call-process (lastpass-cli) nil nil nil "status")))
 
 (defun lastpass-login (&optional email password)
-  "Log in using EMAIL and PASSWORD."
+  "Log in with EMAIL and PASSWORD."
   (let* ((email
           (or email (read-string "Email: " user-mail-address)))
          (password
           (or password (read-passwd "Password: ")))
          (command
-          (format
-           "echo -n '%s' | LPASS_DISABLE_PINENTRY=1 lpass login --color=never %s"
-           password email)))
+          (format "echo -n '%s' | LPASS_DISABLE_PINENTRY=1 %s login --color=never %s"
+                  password
+                  (shell-quote-argument (lastpass-cli))
+                  email)))
     (with-temp-buffer
       (if (zerop (call-process-shell-command command nil t nil))
           (message "Success: Logged in as %s" email)
         (error "%s" (buffer-string))))))
+
+(defun lastpass-login-maybe ()
+  "Login if not already."
+  (unless (lastpass-login-p)
+    (lastpass-login)))
 
 (defun lastpass-logout ()
   "Log out."
@@ -67,12 +86,18 @@
         (csv-parse-buffer t)
       (error "%s" (buffer-string)))))
 
+
+;;; Helm Support
+
+(declare-function helm "helm")
+(declare-function helm-build-sync-source "helm-source")
+
+;;;###autoload
 (defun helm-lastpass ()
   "Helm interface to LastPass."
   (interactive)
+  (lastpass-login-maybe)
   (require 'helm)
-  (unless (lastpass-login-p)
-    (lastpass-login))
   (helm :sources
         (helm-build-sync-source "LastPass"
           :candidates
@@ -96,7 +121,6 @@
                (let ((password (cdr (assoc "password" candidate))))
                  (unless (string= "" password)
                    (kill-new password)
-                   ;; Oops, should I show it?
                    (message "Copied: %s" password)))))
             ("Copy URL" .
              (lambda (candidate)
