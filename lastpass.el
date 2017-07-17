@@ -3,7 +3,7 @@
 ;; Copyright (C) 2017  Chunyang Xu
 
 ;; Author: Chunyang Xu <mail@xuchunyang.me>
-;; Package-Requires: ((csv "2.1"))
+;; Package-Requires: ((csv "2.1") (emacs "24.1"))
 ;; Keywords: password, LastPass
 ;; Version: 0.1
 
@@ -22,15 +22,24 @@
 
 ;;; Commentary:
 
-;; Home Page: https://github.com/lastpass/lastpass-cli
-;; Man Page: https://github.com/lastpass/lastpass-cli/blob/master/lpass.1.txt
+;; This package use lpass (the LastPass command line tool) to let you access
+;; your LastPass within Emacs.
 
-;; Some ideas:
+;; Usage:
 ;;
-;; TODO Not just read, also change, add, delete
-;; TODO Use the Org mode to show?
-;; TODO Use the Tabulated List mode to show?
-;; TODO Some simple Lisp interface like (lastpass-get-password "GitHub")?
+;; - If you have Helm installed, you can run the Emacs command `helm-lastpass'.
+
+;; Notes to myself:
+;;
+;; Userful links:
+;; lpass:    https://github.com/lastpass/lastpass-cli
+;; lpass(1): https://github.com/lastpass/lastpass-cli/blob/master/lpass.1.txt
+;;
+;; Some ideas:
+;; TODO Add Lisp function such as (lastpass-search xxx)
+;; TODO Use the Tabulated List mode to show the result
+;; TODO Use the Org mode to show the result
+;; TODO Not only read, but also add/delete/update
 
 ;;; Code:
 
@@ -59,6 +68,7 @@
          (password
           (or password (read-passwd "Password: ")))
          (command
+          ;; XXX Is there any better solution?
           (format "echo -n '%s' | LPASS_DISABLE_PINENTRY=1 %s login --color=never %s"
                   password
                   (shell-quote-argument (lastpass-cli))
@@ -121,7 +131,9 @@
   "Helm interface to LastPass."
   (interactive)
   (lastpass-login-maybe)
-  (require 'helm)
+  (unless (require 'helm)
+    (user-error "Please install helm from \
+https://github.com/emacs-helm/helm"))
   (helm :sources
         (helm-build-sync-source "LastPass"
           :candidates
