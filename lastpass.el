@@ -22,22 +22,34 @@
 
 ;;; Commentary:
 
-;; This package use lpass (the LastPass command line tool) to let you access
+;; About:
+;;
+;; This package use `lpass' (the LastPass command line tool) to let you access
 ;; your LastPass within Emacs.
+
+;; Requirements:
+;;
+;; (and (version<= "24.3" emacs-version) (executable-find "lpass") (require 'csv)
+;;
+;; - Emacs 24.3 or higher
+;; - `lpass' (The LastPass command line tool)
+;; - `csv.el' (can be installed with `package.el' from Melpa)
 
 ;; Usage:
 ;;
-;; - If you have Helm installed, you can run the Emacs command `helm-lastpass'.
-;; - To copy password of a site, type 'M-x lastpass-copy-password'.
+;; - `M-x list-lastpass'
+;; - `M-x helm-lastpass'
+;; - `M-x lastpass-copy-password'
 
-;; Notes to myself:
+;; Ideas:
 ;;
-;; Userful links:
+;; - TODO Not only read, but also add/delete/update
+
+;; Links:
+;;
 ;; lpass:    https://github.com/lastpass/lastpass-cli
 ;; lpass(1): https://github.com/lastpass/lastpass-cli/blob/master/lpass.1.txt
-;;
-;; Some ideas:
-;; TODO Not only read, but also add/delete/update
+
 
 ;;; Code:
 
