@@ -28,8 +28,8 @@ your LastPass within Emacs.
 
 ## Links
 
-lpass:    https://github.com/lastpass/lastpass-cli
-lpass(1): https://github.com/lastpass/lastpass-cli/blob/master/lpass.1.txt
+- lpass:    https://github.com/lastpass/lastpass-cli
+- lpass(1): https://github.com/lastpass/lastpass-cli/blob/master/lpass.1.txt
 
 
 ---
