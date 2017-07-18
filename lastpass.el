@@ -271,9 +271,7 @@ https://github.com/emacs-helm/helm"))
              (lambda (candidate)
                (let ((url (cdr (assoc "url" candidate))))
                  (kill-new url)
-                 (message "Copied: %s" url))))
-            ;; XXX Remove this in the future
-            ("Pretty-Print (for debugging)" . #'pp)))
+                 (message "Copied: %s" url))))))
         :buffer "*helm LastPass*"))
 
 (provide 'lastpass)
