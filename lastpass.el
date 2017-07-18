@@ -3,7 +3,7 @@
 ;; Copyright (C) 2017  Chunyang Xu
 
 ;; Author: Chunyang Xu <mail@xuchunyang.me>
-;; Package-Requires: ((csv "2.1") (emacs "24.1"))
+;; Package-Requires: ((emacs "24.3") (csv "2.1"))
 ;; Keywords: password, LastPass
 ;; Version: 0.1
 
