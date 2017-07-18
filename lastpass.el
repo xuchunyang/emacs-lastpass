@@ -36,13 +36,13 @@
 ;; lpass(1): https://github.com/lastpass/lastpass-cli/blob/master/lpass.1.txt
 ;;
 ;; Some ideas:
-;; TODO Add Lisp function such as (lastpass-search xxx)
 ;; TODO Use the Tabulated List mode to show the result
 ;; TODO Use the Org mode to show the result
 ;; TODO Not only read, but also add/delete/update
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'csv)
 
 (defgroup lastpass nil
@@ -119,6 +119,11 @@
       (if (zerop (call-process (lastpass-cli) nil t nil "export" "--color=never" sync fields))
           (csv-parse-buffer t)
         (error "%s" (buffer-string))))))
+
+(defun lastpass-search (name)
+  (cl-loop for al in (lastpass-export)
+           when (string-match-p name (cdr (assoc "fullname" al)))
+           collect al))
 
 
 ;;; Helm Support
