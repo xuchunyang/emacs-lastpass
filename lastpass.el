@@ -37,14 +37,13 @@
 ;; lpass(1): https://github.com/lastpass/lastpass-cli/blob/master/lpass.1.txt
 ;;
 ;; Some ideas:
-;; TODO Use the Tabulated List mode to show the result
-;; TODO Use the Org mode to show the result
 ;; TODO Not only read, but also add/delete/update
 
 ;;; Code:
 
 (require 'cl-lib)
 (require 'csv)
+(require 'tabulated-list)
 
 (defgroup lastpass nil
   "LastPass interface for Emacs."
@@ -92,6 +91,7 @@
 
 (defun lastpass-export (&optional sync)
   "Return a list of alist which contains all account information."
+  (lastpass-login-maybe)
   (let ((sync (pcase sync
                 ('nil   "--sync=auto")
                 ('auto "--sync=auto")
@@ -147,6 +147,75 @@
                   return password)))
     (kill-new password)
     (message "Password of %s copied: %s" name password)))
+
+
+;;; LastPass menu mode
+
+(defun lastpass-menu-sort-entries (entries)
+  "Sort LastPass entries like lpass ls."
+  (sort entries
+        (lambda (a b)
+          (let ((a-group (cdr (assoc "group" a)))
+                (b-group (cdr (assoc "group" b))))
+            (if (string= a-group b-group)
+                (let ((a-name (cdr (assoc "name" a)))
+                      (b-name (cdr (assoc "name" b))))
+                  (string< a-name b-name))
+              (string< a-group b-group))))))
+
+(defun lastpass-menu-mode-refresh ()
+  (setq tabulated-list-entries
+        (cl-loop for al in (lastpass-menu-sort-entries (lastpass-export))
+                 for id = (cdr (assoc "id" al))
+                 for group = (cdr (assoc "group" al))
+                 for name = (cdr (assoc "name" al))
+                 for username = (cdr (assoc "username" al))
+                 for password = (cdr (assoc "password" al))
+                 for url = (cdr (assoc "url" al))
+                 for url2 = (if (string= url "http://sn")
+                                ""
+                              (list url
+                                    'action
+                                    (lambda (button)
+                                      (browse-url (button-label button)))))
+                 for contents = (vector name group username password url2)
+                 collect (list id contents))))
+
+(defun lastpass-menu-describe-entry ()
+  "Describe the current entry."
+  (interactive)
+  (shell-command
+   (format "%s show %s"
+           (shell-quote-argument (lastpass-cli))
+           (tabulated-list-get-id))))
+
+(defvar lastpass-menu-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map tabulated-list-mode-map)
+    (define-key map "\C-m" 'lastpass-menu-describe-entry)
+    map)
+  "Keymap for `lastpass-menu-mode'")
+
+(define-derived-mode lastpass-menu-mode tabulated-list-mode "LastPass Menu"
+  "Major mode for listing LastPsss entries."
+  (setq tabulated-list-format [("Name" 18 t)
+			       ("Group" 18)
+                               ("Username" 24)
+                               ("Password" 16)
+                               ("URL" 0)])
+  (lastpass-menu-mode-refresh)
+  (tabulated-list-init-header)
+  (add-hook 'tabulated-list-revert-hook #'lastpass-menu-mode-refresh nil t)
+  (tabulated-list-print))
+
+;;;###autoload
+(defun list-lastpass ()
+  "Display a list of LastPass entries."
+  (interactive)
+  (let ((buffer (get-buffer-create "*LastPass List*")))
+    (with-current-buffer buffer
+      (lastpass-menu-mode))
+    (switch-to-buffer buffer)))
 
 
 ;;; Helm Support
