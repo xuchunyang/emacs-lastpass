@@ -144,7 +144,7 @@ https://github.com/emacs-helm/helm"))
           :candidates
           (lambda ()
             (mapcar (lambda (item)
-                      (cons (cdr (assoc "name" item))
+                      (cons (cdr (assoc "fullname" item))
                             item))
                     (lastpass-export)))
           :action
