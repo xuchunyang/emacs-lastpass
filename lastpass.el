@@ -28,6 +28,7 @@
 ;; Usage:
 ;;
 ;; - If you have Helm installed, you can run the Emacs command `helm-lastpass'.
+;; - To copy password of a site, type 'M-x lastpass-copy-password'.
 
 ;; Notes to myself:
 ;;
@@ -124,6 +125,28 @@
   (cl-loop for al in (lastpass-export)
            when (string-match-p name (cdr (assoc "fullname" al)))
            collect al))
+
+
+;;; User Commands
+
+;;;###autoload
+(defun lastpass-copy-password (name)
+  "Copy password of NAME to kill-ring."
+  (interactive
+   (list
+    (completing-read
+     "Name: "
+     (cl-loop for al in (lastpass-export)
+              collect (cdr (assoc "fullname" al)))
+     nil t)))
+  (let ((password
+         (cl-loop for al in (lastpass-export 'no)
+                  for fullname = (cdr (assoc "fullname" al))
+                  for password = (cdr (assoc "password" al))
+                  when (string= name fullname)
+                  return password)))
+    (kill-new password)
+    (message "Password of %s copied: %s" name password)))
 
 
 ;;; Helm Support
