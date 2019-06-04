@@ -232,8 +232,8 @@
 
 ;;; Helm Support
 
-(declare-function helm "helm")
-(declare-function helm-build-sync-source "helm-source")
+(declare-function helm "helm" (&rest plist))
+(declare-function helm-make-source "helm-source" (name class &rest args))
 
 ;;;###autoload
 (defun helm-lastpass ()
@@ -244,7 +244,7 @@
     (user-error "Please install helm from \
 https://github.com/emacs-helm/helm"))
   (helm :sources
-        (helm-build-sync-source "LastPass"
+        (helm-make-source "LastPass" 'helm-source-sync
           :candidates
           (lambda ()
             (mapcar (lambda (item)
